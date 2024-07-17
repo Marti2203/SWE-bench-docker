@@ -1,6 +1,7 @@
 import argparse
 import json
 from tempfile import NamedTemporaryFile
+from tempfile import mkstemp
 
 from swebench import (
     get_eval_refs,
@@ -20,7 +21,9 @@ def _generate_table(
 """
     instances_ids.sort()
     for instance_id in instances_ids:
-        table_md += f"| [{instance_id}](logs/{instance_id}.{model_name_or_path}.eval.log) "
+        table_md += (
+            f"| [{instance_id}](logs/{instance_id}.{model_name_or_path}.eval.log) "
+        )
         table_md += f"| {instances[instance_id]['repo']} "
         table_md += f"| {instances[instance_id]['version']} |\n"
 
@@ -40,10 +43,12 @@ def generate_report(
 ):
     instances = get_eval_refs(swe_bench_tasks)
 
-    with NamedTemporaryFile(buffering=0, prefix="predictions-", suffix=".jsonl") as jsonl_file:
-        if predictions_path.endswith(".json"):
-            convert_json_to_jsonl(predictions_path, jsonl_file.name)
-            predictions_path = jsonl_file.name
+    if predictions_path.endswith(".json"):
+        _, jsonl_predictions_path = mkstemp(prefix="predictions-", suffix=".jsonl")
+
+        # jsonl_predictions_path = "/tmp/predictions.jsonl"
+        convert_json_to_jsonl(predictions_path, jsonl_predictions_path)
+        predictions_path = jsonl_predictions_path
 
         predictions = get_instances(predictions_path)
         model_name_or_path = predictions[0]["model_name_or_path"]
@@ -78,14 +83,17 @@ def generate_report(
             continue
 
         report_by_patch_status = summary[key]
-        case_resolution += f"""\n\n## {key}
+        case_resolution += (
+            f"""\n\n## {key}
 
 | Resolved | Count | Rate |
 | -------- | ----- | ---- |
 | Yes | {report_by_patch_status['case_resolution_counts'].get('RESOLVED_FULL', 0)} | {report_by_patch_status['case_resolution_rates'].get('RESOLVED_FULL', 0)}% |
 | Partially | {report_by_patch_status['case_resolution_counts'].get('RESOLVED_PARTIAL', 0)} | {report_by_patch_status['case_resolution_rates'].get('RESOLVED_PARTIAL', 0)}% |
 | No | {report_by_patch_status['case_resolution_counts'].get('RESOLVED_NO', 0)} | {report_by_patch_status['case_resolution_rates'].get('RESOLVED_NO', 0)}% |
-"""""
+"""
+            ""
+        )
 
     print(case_resolution)
     report_md += case_resolution

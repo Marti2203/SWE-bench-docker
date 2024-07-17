@@ -15,7 +15,7 @@ from swebench_docker.constants import (
     KEY_MODEL,
     KEY_PREDICTION, MAP_REPO_TO_TEST_FRAMEWORK, )
 from swebench_docker.run_docker import run_docker_evaluation
-from swebench_docker.utils import get_instances
+from swebench_docker.utils import load_predictions
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -114,7 +114,7 @@ async def main(
     """
     if predictions_path:
         predictions_path = os.path.abspath(predictions_path)
-        predictions = get_instances(predictions_path)
+        predictions = load_predictions(predictions_path)
         prediction = [p for p in predictions if p[KEY_INSTANCE_ID] == instance_id][0]
 
         patch = prediction[KEY_PREDICTION]

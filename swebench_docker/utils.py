@@ -7,6 +7,7 @@ from datetime import datetime
 from swebench_docker.constants import (
     MAP_REPO_TO_REQS_PATHS,
     MAP_REPO_TO_ENV_YML_PATHS,
+    MAP_REPO_TO_TEST_FRAMEWORK,
     SWE_BENCH_URL_RAW,
     NON_TEST_EXTS,
 )
@@ -74,7 +75,7 @@ def get_environment_yml(
     return path_to_reqs
 
 
-def get_instances(instance_path: str) -> list:
+def load_predictions(instance_path: str) -> list:
     """
     Get task instances from given path
 
@@ -170,7 +171,7 @@ def get_requirements(instance: dict, save_path: str = None):
     return path_to_reqs
 
 
-def get_test_directives(instance: dict) -> list:
+def get_test_directives(instance: dict) -> list[str]:
     """
     Get test directives from the test_patch of a task instance
 
@@ -203,6 +204,9 @@ def get_test_directives(instance: dict) -> list:
 
     return directives
 
+
+def get_test_type(repo:str) -> str:
+    return MAP_REPO_TO_TEST_FRAMEWORK[repo]
 
 def split_instances(input_list: list, n: int) -> list:
     """
